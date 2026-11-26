@@ -10,7 +10,7 @@
 
 ## 2. Tập A: sửa tay và tune
 
-- Cấu hình gốc: xóa 67, thêm 3, sửa 3; chi phí 25.5.
+- Cấu hình gốc: xóa 70, thêm 3, sửa 3; chi phí 25.5.
 - `best_config.json`: xóa 20, thêm 12, sửa 2; chi phí 19.0.
 - Tham số thay đổi: `score_thr` từ `0.1` lên `0.5`; `min_points` giữ `0`.
 - Chi phí giảm khoảng 25.5% trên tập A. Ba giá trị `min_points` ở `score_thr=0.5` cùng đạt 19.0 nên sweep không phân biệt được lựa chọn tốt nhất giữa chúng; script chọn giá trị đầu tiên là `0`.
