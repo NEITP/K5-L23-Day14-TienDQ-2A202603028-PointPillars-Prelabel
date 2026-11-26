@@ -16,7 +16,14 @@
 | `best_config.json` | 20 | 12 | 2 | 19.0 |
 
 - Tham số đã đổi trong `best_config.json`: `score_thr` từ `0.1` lên `0.5`; `min_points` giữ `0`.
-- Kết quả leave-one-out: bỏ `s01f49`, cấu hình chọn `score_thr=0.5, min_points=0`, chi phí 8.5 (oracle 6.0); bỏ `s02f11`, cùng cấu hình, chi phí 7.8 (oracle 7.7); bỏ `s03f48`, cấu hình chọn `score_thr=0.4, min_points=10`, chi phí 4.5 (oracle 2.7).
+- Tập B dùng `score_thr=0.5` vì ngưỡng này đạt tổng chi phí thấp nhất trên ba frame A (19.0). Cả ba giá trị `min_points` là 0, 5 và 10 đều cho cùng kết quả ở ngưỡng này. Script lấy cấu hình đầu tiên trong ba cấu hình đồng hạng, nên `min_points=0`.
+- Kết quả leave-one-out (chọn cấu hình trên hai frame rồi chấm frame còn lại)
+
+  | Frame được giữ lại để chấm | `score_thr` | `min_points` | Chi phí trên frame giữ lại | Chi phí thấp nhất trong grid trên frame đó |
+  |---|---:|---:|---:|---:|
+  | s01f49 | 0.5 | 0 | 8.5 | 6.0 |
+  | s02f11 | 0.5 | 0 | 7.8 | 7.7 |
+  | s03f48 | 0.4 | 10 | 4.5 | 2.7 |
 - Cấu hình có ổn định trên từng frame không? Không hoàn toàn: hai frame chọn `score_thr=0.5, min_points=0`, còn `s03f48` chọn `score_thr=0.4, min_points=10`. Với chỉ 3 frame, cấu hình có thể bị overfit.
 
 ## 3. Trước/sau (bước 8)
@@ -40,4 +47,3 @@ Số đo từ `scripts/pp_prelabel.py --frames d14_2A202603028/frames_B.txt --co
 
 - Chỉ có 3 frame A để chọn cấu hình; leave-one-out cũng cho thấy cấu hình được chọn thay đổi theo frame.
 - Chi phí là công thức ước lượng trên box trong phạm vi 50 m, không phải thời gian thao tác thực tế trên CVAT.
-
