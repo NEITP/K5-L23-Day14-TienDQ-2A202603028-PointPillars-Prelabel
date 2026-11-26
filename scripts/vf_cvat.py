@@ -12,8 +12,8 @@ Commands::
     python scripts/vf_cvat.py preview d13 --student <ID> --data <data-VF> --table nop/D13-<ID>-bangA.csv --out ./xem
     python scripts/vf_cvat.py check d13 --student <ID> --data <data-VF> --table nop/D13-<ID>-bangA.csv
 
-The CVAT password is read from CVAT_PASSWORD or typed at a prompt. It is never
-written to disk.
+Authentication uses CVAT_ACCESS_TOKEN when set, otherwise CVAT_PASSWORD or a
+password prompt. Secrets are never written to disk.
 """
 
 from __future__ import annotations
@@ -77,13 +77,17 @@ def build_bundle(frames: list[dict], out_zip: Path) -> Path:
 # -------------------------------------------------------------- CVAT
 
 def connect(host: str, user: str, org: str | None):
-    """Log in with the SDK; the password comes from CVAT_PASSWORD or a prompt."""
+    """Log in with a PAT when available, otherwise use the account password."""
     try:
         from cvat_sdk import make_client
     except ImportError:
         raise SystemExit("Thiếu cvat-sdk. Chạy: pip install -r requirements.txt")
-    password = os.environ.get("CVAT_PASSWORD") or getpass.getpass(f"Mật khẩu CVAT cho {user}: ")
-    client = make_client(host, credentials=(user, password))
+    token = os.environ.get("CVAT_ACCESS_TOKEN")
+    if token:
+        client = make_client(host, access_token=token)
+    else:
+        password = os.environ.get("CVAT_PASSWORD") or getpass.getpass(f"Mật khẩu CVAT cho {user}: ")
+        client = make_client(host, credentials=(user, password))
     if org:
         client.organization_slug = org
     return client
@@ -388,8 +392,13 @@ def cmd_prelabel(args) -> int:
                 raise SystemExit(f"Task {name} không khớp bộ frame được giao: {link}. "
                                  "Kiểm SEED và file frames. Báo coach trước khi tạo lại task đã sửa.")
             if box_count and not task.get_annotations().shapes:
-                raise SystemExit(f"Task {name} chưa có nhãn dạng Shape: {link}. "
-                                 "Mở task để kiểm. Nếu đã xóa hộp có chủ đích, dùng reference để xuất.")
+                # Initialize only this exact-frame task after confirming it is empty.
+                uploaded = upload_prelabels(task, boxes)
+                state = prelabel_state_path(args.host, args.org, task.id, name)
+                state.parent.mkdir(parents=True, exist_ok=True)
+                state.write_text(fingerprint, encoding="ascii")
+                print(f"Đã nạp {uploaded} cuboid vào task trống: {link}")
+                return 0
             if args.boxes:
                 state = prelabel_state_path(args.host, args.org, task.id, name)
                 try:
